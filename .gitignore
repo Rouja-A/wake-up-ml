@@ -1,0 +1,28 @@
+# Dataset (download separately; see README) -- never commit raw UCI HAR files
+data/
+
+# Phase-1 sweep checkpoints (9 per-seed files, regenerable by scripts/run_experiments.py; large, not
+# needed to grade the submission). The Phase-2 FINAL checkpoint is the one artifact worth keeping --
+# override this rule explicitly if you want to include it, e.g.:
+#   git add -f results/checkpoints/phase2_final_C_seed123.pt
+results/checkpoints/*
+!results/checkpoints/.gitkeep
+*.pt
+
+# Pipeline smoke test output (throwaway pre-flight check, not part of the frozen experimental record)
+results/smoke_test/
+
+# Python / tooling
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+.venv/
+*.egg-info/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+
+# Anything accidentally zipped up from this repo
+*.zip

@@ -1,0 +1,53 @@
+# Baseline configuration. Only the data/split/preprocessing sections exist so far (Step 2);
+# model and training sections are added in Steps 3-4.
+seed: 42
+
+data:
+  # Path to the extracted "UCI HAR Dataset" directory. Overridable with --data_dir or $UCI_HAR_DIR.
+  data_dir: "data/UCI HAR Dataset"
+  # Fixed channel order = channel axis of the model input. Do not reorder without retraining.
+  channels: [total_acc_x, total_acc_y, total_acc_z, body_gyro_x, body_gyro_y, body_gyro_z]
+  # Ablation (later): [body_acc_x, body_acc_y, body_acc_z, body_gyro_x, body_gyro_y, body_gyro_z]
+
+split:
+  n_val_subjects: 4   # held out from the 21 official training subjects (subject-level, never window-level)
+  seed: 42            # controls WHICH subjects are held out
+
+preprocessing:
+  normalization: per_channel_zscore   # statistics fitted on the training subjects only
+  batch_size: 64
+
+# ---- Step 4: training protocol -------------------------------------------------------------
+training:
+  # Phase 1 (architecture comparison): each of A/B/C is trained once per seed below, on the
+  # Step-2 subject-held-out split (fixed; never reseeded here). Phase 2 (final model) uses its
+  # own separate seed below, trained on official-train-subjects + official-validation-subjects
+  # combined, and is evaluated on the official test subjects exactly once.
+  phase1_seeds: [0, 1, 2]
+  phase2_final_seed: 123
+
+  optimizer: adam
+  lr: 0.001
+  weight_decay: 0.0001
+  batch_size: 64          # mirrors preprocessing.batch_size; kept identical across A/B/C and both phases
+
+  max_epochs: 100
+  early_stopping:
+    monitor: val_macro_f1
+    mode: max              # higher is better
+    patience: 15
+
+  scheduler:
+    type: reduce_on_plateau
+    monitor: val_macro_f1
+    mode: max
+    factor: 0.5
+    patience: 7
+
+  loss: cross_entropy       # unweighted; UCI HAR's six classes are not severely imbalanced (verified at run time)
+  checkpoint_selection: "best val_macro_f1, ties broken by lower val_loss"
+
+  seed_note: >
+    phase1_seeds control model init + DataLoader shuffling ONLY; the train/validation subject
+    split itself uses split.seed above (fixed at 42) for every phase-1 run, so seeds only ever
+    vary the thing they are meant to estimate the stability of (architecture ranking), not the data.
