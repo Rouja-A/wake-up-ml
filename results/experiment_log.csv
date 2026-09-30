@@ -1,0 +1,10 @@
+run_name,model,seed,device,best_epoch,epochs_ran,stopped_early,train_seconds,best_val_loss,best_val_acc,best_val_macro_f1,checkpoint_path,curves_path
+phase1_A_seed0,A,0,cuda,3,19,True,6.4,0.20274604215095096,0.9898167006109979,0.9897505224107753,results\checkpoints\phase1_A_seed0.pt,results\metrics\phase1_A_seed0_curves.json
+phase1_A_seed1,A,1,cuda,3,19,True,5.8,0.22707312719015063,0.9891378139850645,0.9889815183800342,results\checkpoints\phase1_A_seed1.pt,results\metrics\phase1_A_seed1_curves.json
+phase1_A_seed2,A,2,cuda,3,19,True,6.0,0.27696471395779043,0.988458927359131,0.988345969042912,results\checkpoints\phase1_A_seed2.pt,results\metrics\phase1_A_seed2_curves.json
+phase1_B_seed0,B,0,cuda,2,18,True,7.3,0.14484306224555446,0.9809911744738629,0.9808575405806662,results\checkpoints\phase1_B_seed0.pt,results\metrics\phase1_B_seed0_curves.json
+phase1_B_seed1,B,1,cuda,4,20,True,7.6,0.10838603389936892,0.9823489477257298,0.98229321048842,results\checkpoints\phase1_B_seed1.pt,results\metrics\phase1_B_seed1_curves.json
+phase1_B_seed2,B,2,cuda,2,18,True,6.9,0.1355209981330948,0.9803122878479293,0.9800739407143927,results\checkpoints\phase1_B_seed2.pt,results\metrics\phase1_B_seed2_curves.json
+phase1_C_seed0,C,0,cuda,1,17,True,6.7,0.28388659108761455,0.9904955872369314,0.9905185469665013,results\checkpoints\phase1_C_seed0.pt,results\metrics\phase1_C_seed0_curves.json
+phase1_C_seed1,C,1,cuda,1,17,True,6.9,0.22254700815078765,0.9891378139850645,0.9892843422675343,results\checkpoints\phase1_C_seed1.pt,results\metrics\phase1_C_seed1_curves.json
+phase1_C_seed2,C,2,cuda,2,18,True,8.1,0.12992775411890709,0.9904955872369314,0.9897023498967013,results\checkpoints\phase1_C_seed2.pt,results\metrics\phase1_C_seed2_curves.json

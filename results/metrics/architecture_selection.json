@@ -1,0 +1,65 @@
+{
+  "summary": {
+    "A": {
+      "mean_val_macro_f1": 0.9890260032779072,
+      "std_val_macro_f1": 0.0005742686481651194,
+      "min": 0.988345969042912,
+      "max": 0.9897505224107753,
+      "n_seeds": 3,
+      "values": [
+        0.9897505224107753,
+        0.9889815183800342,
+        0.988345969042912
+      ],
+      "best_epoch_per_seed": [
+        3.0,
+        3.0,
+        3.0
+      ],
+      "mean_best_epoch": 3.0,
+      "recommended_phase2_epochs": 3
+    },
+    "B": {
+      "mean_val_macro_f1": 0.9810748972611596,
+      "std_val_macro_f1": 0.0009189568460648364,
+      "min": 0.9800739407143927,
+      "max": 0.98229321048842,
+      "n_seeds": 3,
+      "values": [
+        0.9808575405806662,
+        0.98229321048842,
+        0.9800739407143927
+      ],
+      "best_epoch_per_seed": [
+        2.0,
+        4.0,
+        2.0
+      ],
+      "mean_best_epoch": 2.6666666666666665,
+      "recommended_phase2_epochs": 3
+    },
+    "C": {
+      "mean_val_macro_f1": 0.9898350797102456,
+      "std_val_macro_f1": 0.0005125285112659507,
+      "min": 0.9892843422675343,
+      "max": 0.9905185469665013,
+      "n_seeds": 3,
+      "values": [
+        0.9905185469665013,
+        0.9892843422675343,
+        0.9897023498967013
+      ],
+      "best_epoch_per_seed": [
+        1.0,
+        1.0,
+        2.0
+      ],
+      "mean_best_epoch": 1.3333333333333333,
+      "recommended_phase2_epochs": 1
+    }
+  },
+  "selected_model": "C",
+  "phase2_epochs": 1,
+  "selection_rule": "architecture with the highest MEAN validation macro-F1 across its seeds",
+  "phase2_epochs_rule": "round(mean of Phase-1 best_epoch across that architecture's seeds); fixed before Phase 2 runs, not tuned during Phase 2 (Phase 2 has no validation set)"
+}

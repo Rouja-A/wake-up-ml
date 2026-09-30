@@ -1,0 +1,49 @@
+{
+  "param_budget": 20000,
+  "using_torch": false,
+  "sampling_hz": 50,
+  "models": [
+    {
+      "model": "A",
+      "description": "Minimal (2 conv layers)",
+      "params": 3766,
+      "weight_kb": 14.71,
+      "macs": 274624,
+      "mmacs": 0.275,
+      "local_rf_samples": 18,
+      "local_rf_ms": 360.0,
+      "post_gap_coverage_samples": 128,
+      "post_gap_coverage_ms": 2560.0,
+      "peak_activation_kb": 8.0,
+      "peak_activation_layer": "Conv1d[0]"
+    },
+    {
+      "model": "B",
+      "description": "3-conv CNN (main candidate)",
+      "params": 14390,
+      "weight_kb": 56.21,
+      "macs": 602496,
+      "mmacs": 0.602,
+      "local_rf_samples": 36,
+      "local_rf_ms": 720.0,
+      "post_gap_coverage_samples": 128,
+      "post_gap_coverage_ms": 2560.0,
+      "peak_activation_kb": 8.0,
+      "peak_activation_layer": "Conv1d[0]"
+    },
+    {
+      "model": "C",
+      "description": "Depthwise-separable (3 stages)",
+      "params": 8862,
+      "weight_kb": 34.62,
+      "macs": 415296,
+      "mmacs": 0.415,
+      "local_rf_samples": 60,
+      "local_rf_ms": 1200.0,
+      "post_gap_coverage_samples": 128,
+      "post_gap_coverage_ms": 2560.0,
+      "peak_activation_kb": 12.0,
+      "peak_activation_layer": "Conv1d[0]"
+    }
+  ]
+}

@@ -1,0 +1,235 @@
+{
+  "model_name": "C",
+  "checkpoint_path": "results\\checkpoints\\phase2_final_C_seed123.pt",
+  "accuracy": 0.8870037326094333,
+  "macro_f1": 0.8864032938750008,
+  "weighted_f1": 0.8876368362803798,
+  "n_samples": 2947,
+  "class_names": [
+    "WALKING",
+    "WALKING_UPSTAIRS",
+    "WALKING_DOWNSTAIRS",
+    "SITTING",
+    "STANDING",
+    "LAYING"
+  ],
+  "per_class": [
+    {
+      "name": "WALKING",
+      "precision": 0.9885844748858448,
+      "recall": 0.8729838709677419,
+      "f1": 0.9271948608137045,
+      "support": 496
+    },
+    {
+      "name": "WALKING_UPSTAIRS",
+      "precision": 0.9606481481481481,
+      "recall": 0.881104033970276,
+      "f1": 0.9191583610188261,
+      "support": 471
+    },
+    {
+      "name": "WALKING_DOWNSTAIRS",
+      "precision": 0.781190019193858,
+      "recall": 0.969047619047619,
+      "f1": 0.8650371944739639,
+      "support": 420
+    },
+    {
+      "name": "SITTING",
+      "precision": 0.8299319727891157,
+      "recall": 0.745417515274949,
+      "f1": 0.7854077253218884,
+      "support": 491
+    },
+    {
+      "name": "STANDING",
+      "precision": 0.7889273356401384,
+      "recall": 0.8571428571428571,
+      "f1": 0.8216216216216217,
+      "support": 532
+    },
+    {
+      "name": "LAYING",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 537
+    }
+  ],
+  "confusion_matrix": [
+    [
+      433,
+      3,
+      59,
+      1,
+      0,
+      0
+    ],
+    [
+      1,
+      415,
+      55,
+      0,
+      0,
+      0
+    ],
+    [
+      4,
+      9,
+      407,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      3,
+      0,
+      366,
+      122,
+      0
+    ],
+    [
+      0,
+      2,
+      0,
+      74,
+      456,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      537
+    ]
+  ],
+  "most_confused_pairs": [
+    {
+      "true": "SITTING",
+      "predicted": "STANDING",
+      "count": 122,
+      "fraction_of_true_class": 0.2484725050916497
+    },
+    {
+      "true": "STANDING",
+      "predicted": "SITTING",
+      "count": 74,
+      "fraction_of_true_class": 0.13909774436090225
+    },
+    {
+      "true": "WALKING",
+      "predicted": "WALKING_DOWNSTAIRS",
+      "count": 59,
+      "fraction_of_true_class": 0.11895161290322581
+    },
+    {
+      "true": "WALKING_UPSTAIRS",
+      "predicted": "WALKING_DOWNSTAIRS",
+      "count": 55,
+      "fraction_of_true_class": 0.11677282377919321
+    },
+    {
+      "true": "WALKING_DOWNSTAIRS",
+      "predicted": "WALKING_UPSTAIRS",
+      "count": 9,
+      "fraction_of_true_class": 0.02142857142857143
+    },
+    {
+      "true": "WALKING_DOWNSTAIRS",
+      "predicted": "WALKING",
+      "count": 4,
+      "fraction_of_true_class": 0.009523809523809525
+    },
+    {
+      "true": "WALKING",
+      "predicted": "WALKING_UPSTAIRS",
+      "count": 3,
+      "fraction_of_true_class": 0.006048387096774193
+    },
+    {
+      "true": "SITTING",
+      "predicted": "WALKING_UPSTAIRS",
+      "count": 3,
+      "fraction_of_true_class": 0.006109979633401222
+    },
+    {
+      "true": "STANDING",
+      "predicted": "WALKING_UPSTAIRS",
+      "count": 2,
+      "fraction_of_true_class": 0.0037593984962406013
+    },
+    {
+      "true": "WALKING",
+      "predicted": "SITTING",
+      "count": 1,
+      "fraction_of_true_class": 0.0020161290322580645
+    },
+    {
+      "true": "WALKING_UPSTAIRS",
+      "predicted": "WALKING",
+      "count": 1,
+      "fraction_of_true_class": 0.0021231422505307855
+    }
+  ],
+  "lowest_f1": {
+    "name": "SITTING",
+    "precision": 0.8299319727891157,
+    "recall": 0.745417515274949,
+    "f1": 0.7854077253218884,
+    "support": 491
+  },
+  "highest_f1": {
+    "name": "LAYING",
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "support": 537
+  },
+  "activity_group_breakdown": {
+    "groups": {
+      "static": [
+        "SITTING",
+        "STANDING",
+        "LAYING"
+      ],
+      "dynamic": [
+        "WALKING",
+        "WALKING_UPSTAIRS",
+        "WALKING_DOWNSTAIRS"
+      ]
+    },
+    "total_errors": 333,
+    "within_group_errors": {
+      "static": 196,
+      "dynamic": 131
+    },
+    "across_group_errors": 6,
+    "within_group_fraction": {
+      "static": 0.5885885885885885,
+      "dynamic": 0.3933933933933934
+    },
+    "across_group_fraction": 0.018018018018018018,
+    "group_pair_counts": {
+      "static->static": 196,
+      "dynamic->dynamic": 131,
+      "static->dynamic": 5,
+      "dynamic->static": 1
+    }
+  },
+  "test_subjects": [
+    2,
+    4,
+    9,
+    10,
+    12,
+    13,
+    18,
+    20,
+    24
+  ],
+  "predictions_csv": "results\\metrics\\final_test_predictions.csv"
+}
