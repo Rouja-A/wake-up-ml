@@ -76,7 +76,8 @@ def test_select_architecture_picks_highest_mean_f1():
     sel = select_architecture(rows)
     assert sel["selected_model"] == "B"
     assert abs(sel["summary"]["B"]["mean_val_macro_f1"] - (0.90 + 0.88 + 0.91) / 3) < 1e-9
-    assert sel["phase2_epochs"] == round((25 + 30 + 22) / 3)
+    assert sel["phase2_epochs"] == round(((25 + 5) + (30 + 5) + (22 + 5)) / 3)
+    assert sel["summary"]["B"]["epochs_ran_per_seed"] == [30, 35, 27]
 
 
 def test_select_architecture_works_on_string_valued_csv_rows():
@@ -279,10 +280,10 @@ def test_evaluate_final_saves_all_expected_artifacts():
         assert expected_key in src, f"predictions CSV header must include {expected_key}"
 
 
-def test_evaluate_final_force_flag_defaults_off():
+def test_evaluate_final_repeat_test_acknowledgement_defaults_off():
     src = _evaluate_final_source()
-    assert '"--force", action="store_true"' in src, "--force must default to False (action='store_true')"
-    assert "not args.force" in src, "the guard must check 'not args.force'"
+    assert '"--acknowledge-repeat-test", action="store_true"' in src
+    assert "not args.acknowledge_repeat_test" in src
 
 
 def test_scheduler_monitor_bug_regression():

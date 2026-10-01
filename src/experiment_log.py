@@ -1,5 +1,11 @@
-"""CSV experiment log + Phase-1 architecture/epoch-budget selection. No torch dependency, so this is
-testable without a real training run (see tests/test_experiment_log.py).
+"""CSV experiment log + Phase-1 architecture/epoch-budget selection.
+
+Architecture selection uses mean validation macro-F1 across seeds. The fixed Phase-2 training budget
+is the rounded mean of the selected architecture's *actual Phase-1 training durations* (epochs_ran).
+This keeps the final-training duration development-only while avoiding the earlier mistake of treating
+the epoch of peak validation F1 as the amount of optimization required when retraining from scratch.
+
+No torch dependency, so this is testable without a real training run.
 """
 from __future__ import annotations
 
@@ -26,26 +32,41 @@ def read_log(path: Path) -> list:
 
 
 def select_architecture(rows: list) -> dict:
-    """rows: list of dicts with at least 'model', 'best_val_macro_f1', 'best_epoch' (as in LOG_FIELDS).
-    Selects the architecture with the highest MEAN validation macro-F1 across its seeds, and derives a
-    fixed Phase-2 epoch budget for it from the mean of its Phase-1 best_epoch values.
+    """Select by mean validation macro-F1 and derive Phase-2 duration from ``epochs_ran``.
+
+    The Phase-2 rule is fixed from development runs only:
+    round(mean(actual Phase-1 training durations for the selected architecture)).
     """
     if not rows:
         raise ValueError("select_architecture called with no rows")
-    by_model, epochs_by_model = {}, {}
+    by_model, best_epochs_by_model, durations_by_model = {}, {}, {}
     for r in rows:
-        by_model.setdefault(r["model"], []).append(float(r["best_val_macro_f1"]))
-        epochs_by_model.setdefault(r["model"], []).append(float(r["best_epoch"]))
+        model = r["model"]
+        by_model.setdefault(model, []).append(float(r["best_val_macro_f1"]))
+        best_epochs_by_model.setdefault(model, []).append(float(r["best_epoch"]))
+        durations_by_model.setdefault(model, []).append(int(float(r["epochs_ran"])))
+
     summary = {}
-    for m, v in by_model.items():
-        eps = epochs_by_model[m]
-        summary[m] = {"mean_val_macro_f1": statistics.mean(v), "std_val_macro_f1": statistics.pstdev(v) if len(v) > 1 else 0.0,
-                     "min": min(v), "max": max(v), "n_seeds": len(v), "values": v,
-                     "best_epoch_per_seed": eps, "mean_best_epoch": statistics.mean(eps),
-                     "recommended_phase2_epochs": max(1, round(statistics.mean(eps)))}
+    for model, values in by_model.items():
+        best_epochs = best_epochs_by_model[model]
+        durations = durations_by_model[model]
+        phase2_epochs = max(1, round(statistics.mean(durations)))
+        summary[model] = {
+            "mean_val_macro_f1": statistics.mean(values),
+            "std_val_macro_f1": statistics.pstdev(values) if len(values) > 1 else 0.0,
+            "min": min(values), "max": max(values), "n_seeds": len(values), "values": values,
+            "best_epoch_per_seed": best_epochs,
+            "mean_best_epoch": statistics.mean(best_epochs),
+            "epochs_ran_per_seed": durations,
+            "mean_epochs_ran": statistics.mean(durations),
+            "recommended_phase2_epochs": phase2_epochs,
+        }
+
     selected = max(summary, key=lambda m: summary[m]["mean_val_macro_f1"])
-    return {"summary": summary, "selected_model": selected,
-           "phase2_epochs": summary[selected]["recommended_phase2_epochs"],
-           "selection_rule": "architecture with the highest MEAN validation macro-F1 across its seeds",
-           "phase2_epochs_rule": "round(mean of Phase-1 best_epoch across that architecture's seeds); "
-                                 "fixed before Phase 2 runs, not tuned during Phase 2 (Phase 2 has no validation set)"}
+    return {
+        "summary": summary,
+        "selected_model": selected,
+        "phase2_epochs": summary[selected]["recommended_phase2_epochs"],
+        "selection_rule": "architecture with the highest MEAN validation macro-F1 across its seeds",
+        "phase2_epochs_rule": "round(mean of actual Phase-1 epochs_ran across the selected architecture's seeds)",
+    }

@@ -2,9 +2,9 @@
 """Phase 2, step 2: the SINGLE, final evaluation on the official UCI HAR test subjects.
 
 Run this exactly once, after scripts/train_final.py has produced the final checkpoint. Refuses to
-silently overwrite a previous test evaluation (pass --force if you genuinely need to re-run it, e.g.
-because Phase 2 training was itself redone -- but note that doing this repeatedly while iterating is
-exactly the test-set leakage the whole protocol exists to avoid).
+overwrite a previous test evaluation. The submitted test result is frozen. A repeat requires the deliberately
+verbose --acknowledge-repeat-test flag and must be treated as post-hoc/exploratory rather than a replacement
+for the original one-shot result.
 
     python scripts/evaluate_final.py --config configs/baseline.yaml [--data_dir ...]
 """
@@ -36,15 +36,16 @@ def main() -> int:
     ap.add_argument("--device", default="auto", choices=["auto", "cpu", "cuda"])
     ap.add_argument("--metrics_dir", default="results/metrics")
     ap.add_argument("--figures_dir", default="results/figures")
-    ap.add_argument("--force", action="store_true", help="allow overwriting a previous final test evaluation")
+    ap.add_argument("--acknowledge-repeat-test", action="store_true",
+                    help="explicitly acknowledge a repeated official-test evaluation; post-hoc only")
     args = ap.parse_args()
 
     out_path = Path(args.metrics_dir) / "final_test_evaluation.json"
-    if out_path.is_file() and not args.force:
+    if out_path.is_file() and not args.acknowledge_repeat_test:
         print(f"REFUSING to run: {out_path} already exists, meaning the official test set has already been "
-             f"evaluated once for this final model. Re-running this without --force would defeat the "
-             f"point of evaluating the test set only once. If Phase 2 training was genuinely redone, "
-             f"rerun with --force.")
+             f"evaluated once for this final model. Re-running it would defeat the "
+             f"point of evaluating the test set only once. If you intentionally need a post-hoc repeat, use "
+             f"--acknowledge-repeat-test and do not present it as a replacement one-shot test result.")
         return 1
 
     info_path = Path(args.metrics_dir) / "final_model_info.json"

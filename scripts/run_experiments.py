@@ -65,7 +65,11 @@ def main() -> int:
     sel_path = Path(args.metrics_dir) / "architecture_selection.json"
     save_json(selection, sel_path)
     print(f"\nSelected architecture: {selection['selected_model']}")
-    print(f"Phase 2 epoch budget (fixed now, from this Phase-1 result): {selection['phase2_epochs']}")
+    selected_stats = selection['summary'][selection['selected_model']]
+    print(f"Phase 1 training durations for {selection['selected_model']}: {selected_stats['epochs_ran_per_seed']}")
+    print(f"Mean training duration: {selected_stats['mean_epochs_ran']:.2f} epochs")
+    print(f"Phase 2 fixed training budget: {selection['phase2_epochs']} epochs")
+    print("Rule: round(mean actual Phase-1 epochs_ran); best-validation epochs are NOT used for this budget.")
     print(f"Wrote {sel_path}")
     print("\nPhase 1 complete. The official UCI test set was not loaded or used in this script.")
     return 0

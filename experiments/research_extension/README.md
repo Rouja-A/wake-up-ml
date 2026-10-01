@@ -2,10 +2,9 @@
 
 Isolated, **training-subjects-only** exploratory study. It never loads or evaluates the official UCI test
 split, never touches Models A/B/C, their checkpoints, or any frozen result, and writes only under
-`results/research_extension/`. The primary assignment (`report/report.md`) is unchanged.
+`results/research_extension/`. The primary assignment (`report/final_report.ipynb`) is unchanged.
 
-**Status: code complete and statically tested; no training has been run. All measured results are
-`NOT YET MEASURED — run locally`.**
+**Status: run to completion (validation only). Results: `results/research_extension/metrics/research_extension_tables.md`, summarised in `report/final_report.ipynb`.**
 
 ## What it does (18 training runs, seeds 0/1/2, Phase-1 split and protocol)
 

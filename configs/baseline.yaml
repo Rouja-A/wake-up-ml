@@ -22,9 +22,10 @@ training:
   # Phase 1 (architecture comparison): each of A/B/C is trained once per seed below, on the
   # Step-2 subject-held-out split (fixed; never reseeded here). Phase 2 (final model) uses its
   # own separate seed below, trained on official-train-subjects + official-validation-subjects
-  # combined, and is evaluated on the official test subjects exactly once.
+  # combined. Its fixed epoch budget is derived from the selected model's Phase-1 epochs_ran values.
   phase1_seeds: [0, 1, 2]
   phase2_final_seed: 123
+
 
   optimizer: adam
   lr: 0.001

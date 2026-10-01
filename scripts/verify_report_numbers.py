@@ -96,14 +96,14 @@ def main() -> int:
         check_confusion_matrix_arithmetic(data["confusion_matrix"], data["class_names"], data, chk)
     else:
         chk.warn(f"{eval_path} not found in this checkout", "skipping confusion-matrix arithmetic check -- "
-                "merge the real Step-5 results into results/metrics/ before submission and re-run this script")
+                "revised-protocol test result not present; historical result is archived separately")
 
     sel_path = Path(args.metrics_dir) / "architecture_selection.json"
     if sel_path.is_file():
         print(f"\n== Checking {sel_path} ==")
         sel = json.loads(sel_path.read_text())
         chk.check(sel["selected_model"] == "C", "selected architecture is C", sel["selected_model"])
-        chk.check(sel["phase2_epochs"] == 1, "fixed Phase-2 epoch budget derived from Phase 1 is 1", str(sel["phase2_epochs"]))
+        chk.check(sel["phase2_epochs"] == 17, "architecture_selection.json records revised 17-epoch Phase-2 rule", str(sel["phase2_epochs"]))
     else:
         chk.warn(f"{sel_path} not found in this checkout", "skipping architecture-selection check")
 
@@ -113,12 +113,15 @@ def main() -> int:
         info = json.loads(info_path.read_text())
         chk.check(info["model_name"] == "C", "Phase-2 final model is C", info["model_name"])
         chk.check(info["seed"] == 123, "Phase-2 final seed is 123", str(info["seed"]))
-        chk.check(info["epochs"] == 1, "Phase-2 trained for exactly 1 epoch", str(info["epochs"]))
-        chk.check("phase2_final_C_seed123" in info.get("checkpoint_path", ""),
-                 "checkpoint path names model/seed consistently", info.get("checkpoint_path"))
-        if sel_path.is_file():
-            chk.check(info["epochs"] == sel["phase2_epochs"],
-                     "final_model_info.json epoch count matches architecture_selection.json's derived budget")
+        import statistics
+        c_curves = sorted(Path(args.metrics_dir).glob("phase1_C_seed*_curves.json"))
+        durations = [int(json.loads(cp.read_text())["epochs_ran"]) for cp in c_curves]
+        expected_epochs = max(1, round(statistics.mean(durations))) if durations else 17
+        chk.check(info["epochs"] == expected_epochs,
+                 "Phase-2 epoch count matches rounded mean actual Phase-1 training duration",
+                 f"{info['epochs']} (expected {expected_epochs} from {durations})")
+        chk.check(f"phase2_final_C_e{expected_epochs}_seed123" in info.get("checkpoint_path", ""),
+                 "checkpoint path names model/epoch/seed consistently", info.get("checkpoint_path"))
     else:
         chk.warn(f"{info_path} not found in this checkout", "skipping Phase-2 metadata check")
 
@@ -153,7 +156,7 @@ def main() -> int:
                      "confusion matrix recounted from the predictions CSV matches the saved confusion matrix exactly")
     else:
         chk.warn(f"{pred_path} not found in this checkout", "skipping row-count/recount check -- "
-                "merge the real Step-5 results into results/metrics/ before submission and re-run this script")
+                "revised-protocol test result not present; historical result is archived separately")
 
     return chk.summary()
 
