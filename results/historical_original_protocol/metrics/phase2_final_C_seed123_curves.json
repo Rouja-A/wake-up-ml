@@ -1,0 +1,29 @@
+{
+  "run_name": "phase2_final_C_seed123",
+  "model_name": "C",
+  "seed": 123,
+  "history": {
+    "train_loss": [
+      0.6507975961263084
+    ],
+    "train_acc": [
+      0.8423558215451578
+    ],
+    "val_loss": [
+      0.23004312993263393
+    ],
+    "val_acc": [
+      0.9381120783460283
+    ],
+    "val_macro_f1": [
+      0.9409087995896348
+    ],
+    "lr": [
+      0.001
+    ]
+  },
+  "best_epoch": 1,
+  "epochs_ran": 1,
+  "train_seconds": 1.2571909427642822,
+  "checkpoint_mode": "last"
+}

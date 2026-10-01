@@ -1,11 +1,12 @@
 {
   "model_name": "C",
-  "how_selected": "read from results\\metrics\\architecture_selection.json (Phase 1 selection); epochs read from results\\metrics\\architecture_selection.json (Phase 1 result)",
+  "how_selected": "round(mean Phase-1 epochs_ran [17, 17, 18]) = 17",
   "seed": 123,
-  "epochs": 1,
-  "run_name": "phase2_final_C_seed123",
-  "checkpoint_path": "results\\checkpoints\\phase2_final_C_seed123.pt",
-  "curves_path": "results\\metrics\\phase2_final_C_seed123_curves.json",
+  "epochs": 17,
+  "run_name": "phase2_final_C_e17_seed123",
+  "protocol": "mean_phase1_training_duration",
+  "checkpoint_path": "results\\checkpoints\\phase2_final_C_e17_seed123.pt",
+  "curves_path": "results\\metrics\\phase2_final_C_e17_seed123_curves.json",
   "n_train_windows": 7352,
   "train_subjects": [
     1,

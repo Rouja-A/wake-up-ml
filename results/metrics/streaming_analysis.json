@@ -1,0 +1,87 @@
+{
+  "_label_legend": {
+    "MEASURED": "obtained by actually running our Python/PyTorch experiment (Steps 1-5)",
+    "DERIVED": "computed mathematically from MEASURED or from the frozen architecture spec; no new experiment run",
+    "HYPOTHETICAL": "illustrative/deployment-oriented figure requiring a real implementation choice not made or tested here",
+    "FUTURE_HARDWARE_WORK": "requires hardware measurement we have not performed; never invented"
+  },
+
+  "selected_model": {"value": "C", "label": "MEASURED", "source": "Phase-1 architecture_selection.json, pre-registered validation macro-F1 rule"},
+  "seed": {"value": 123, "label": "MEASURED", "source": "final_model_info.json"},
+
+  "signal": {
+    "sampling_rate_hz": {"value": 50, "label": "MEASURED", "source": "UCI HAR Inertial Signals documentation, verified in Step 2"},
+    "channels": {"value": ["total_acc_x", "total_acc_y", "total_acc_z", "body_gyro_x", "body_gyro_y", "body_gyro_z"], "label": "MEASURED"},
+    "window_samples": {"value": 128, "label": "MEASURED"},
+    "window_duration_s": {"value": 2.56, "label": "DERIVED", "formula": "window_samples / sampling_rate_hz = 128 / 50"},
+    "hop_samples": {"value": 64, "label": "MEASURED", "note": "UCI HAR's native 50% window overlap"},
+    "hop_duration_s": {"value": 1.28, "label": "DERIVED", "formula": "hop_samples / sampling_rate_hz = 64 / 50"}
+  },
+
+  "model_C_structure": {
+    "trainable_params": {"value": 8862, "label": "MEASURED", "source": "src/shape_calc.py::analyze, cross-checked against real PyTorch named_parameters() in Step 3"},
+    "macs_per_window": {"value": 415296, "label": "MEASURED", "source": "same as above"},
+    "local_receptive_field_samples": {"value": 60, "label": "MEASURED", "note": "pre-GAP backbone RF; standard r <- r+(k-1)*j, j <- j*s recurrence"},
+    "local_receptive_field_ms": {"value": 1200.0, "label": "DERIVED", "formula": "1000 * local_RF_samples / sampling_rate_hz = 1000*60/50"},
+    "post_gap_effective_coverage_samples": {"value": 128, "label": "DERIVED", "note": "GAP averages the entire remaining feature map (32 positions, jump 4); raw union-of-RFs value is 184 samples, capped at the true 128-sample input window"},
+    "float32_weight_memory_kb": {"value": 34.62, "label": "MEASURED"},
+    "peak_activation_kb": {"value": 12.0, "label": "MEASURED", "layer": "first Conv1d output, shape (24, 128)"}
+  },
+
+  "compute_rate_50pct_overlap_scheme": {
+    "classifications_per_second": {"value": 0.78125, "label": "DERIVED", "formula": "1 / hop_duration_s = 1 / 1.28"},
+    "macs_per_second": {"value": 324450.0, "label": "DERIVED", "formula": "macs_per_window / hop_duration_s = 415296 / 1.28"},
+    "mmacs_per_second": {"value": 0.32445, "label": "DERIVED"},
+    "note": "This is a THROUGHPUT figure for the current non-streaming, whole-window-recompute scheme; it is NOT an MCU cycle count, latency, or energy figure (see hardware_work_needed below)."
+  },
+
+  "input_bandwidth": {
+    "raw_values_per_second": {"value": 300, "label": "DERIVED", "formula": "6 channels * 50 Hz"},
+    "float32_bandwidth_bytes_per_s": {"value": 1200, "label": "DERIVED", "formula": "300 * 4 bytes"},
+    "float32_bandwidth_kbps": {"value": 9.6, "label": "DERIVED"},
+    "int16_bandwidth_bytes_per_s": {"value": 600, "label": "HYPOTHETICAL", "note": "illustrative deployment-oriented sensor format; this project never used int16 input"},
+    "int16_bandwidth_kbps": {"value": 4.8, "label": "HYPOTHETICAL"}
+  },
+
+  "quantization_storage_estimate": {
+    "note": "naive storage arithmetic only (1 byte/parameter); ignores per-channel scale/zero-point metadata, BN folding, and any other real quantization overhead; NOT an accuracy, latency, or energy claim",
+    "model_C_int8_weight_kb": {"value": 8.65, "label": "DERIVED", "formula": "trainable_params * 1 byte / 1024 = 8862/1024"},
+    "model_C_fp32_to_int8_ratio": {"value": 0.25, "label": "DERIVED", "note": "1 byte / 4 bytes; i.e. a 75% reduction in raw weight storage"},
+    "model_A_int8_weight_kb": {"value": 3.68, "label": "DERIVED", "formula": "3766/1024"}
+  },
+
+  "phase1_validation_macro_f1": {
+    "A": {"mean": 0.9890, "std": 0.0006, "label": "MEASURED"},
+    "B": {"mean": 0.9811, "std": 0.0009, "label": "MEASURED"},
+    "C": {"mean": 0.9898, "std": 0.0005, "label": "MEASURED"},
+    "selected": "C"
+  },
+
+  "final_test_evaluation": {
+    "n_windows": 2947, "n_subjects": 9,
+    "accuracy": 0.8870, "macro_f1": 0.8864, "weighted_f1": 0.8876,
+    "label": "MEASURED", "source": "results/metrics/final_test_evaluation.json, ONE-time evaluation, Step 5",
+    "per_class_f1": {"WALKING": 0.927, "WALKING_UPSTAIRS": 0.919, "WALKING_DOWNSTAIRS": 0.865,
+                     "SITTING": 0.785, "STANDING": 0.822, "LAYING": 1.000},
+    "error_group_breakdown": {"within_static_pct": 58.9, "within_dynamic_pct": 39.3, "across_groups_pct": 1.8}
+  },
+
+  "A_vs_C_embedded_tradeoff": {
+    "params": {"A": 3766, "C": 8862, "label": "MEASURED"},
+    "macs_per_window": {"A": 274624, "C": 415296, "label": "MEASURED"},
+    "local_rf_ms": {"A": 360, "C": 1200, "label": "MEASURED/DERIVED"},
+    "validation_macro_f1": {"A": 0.9890, "C": 0.9898, "label": "MEASURED"},
+    "param_increase_A_to_C_pct": {"value": 135.32, "label": "DERIVED", "formula": "(8862-3766)/3766*100"},
+    "param_reduction_C_to_A_pct": {"value": 57.5, "label": "DERIVED", "formula": "(8862-3766)/8862*100"},
+    "mac_increase_A_to_C_pct": {"value": 51.22, "label": "DERIVED", "formula": "(415296-274624)/274624*100"},
+    "mac_reduction_C_to_A_pct": {"value": 33.87, "label": "DERIVED", "formula": "(415296-274624)/415296*100"},
+    "validation_macro_f1_gap": {"value": 0.0008, "label": "DERIVED", "note": "0.9898 - 0.9890; within roughly one Phase-1 std (0.0005-0.0006) of either model"}
+  },
+
+  "hardware_work_needed": {
+    "label": "FUTURE_HARDWARE_WORK, none of this has been measured",
+    "items": ["MCU clock cycles per layer/window", "DMA-compute overlap efficiency", "pipeline stalls",
+             "SRAM read/write traffic", "energy per inference / per classification", "wake-up latency from event to interrupt",
+             "int8 quantized accuracy", "int8 quantized latency/energy", "any accelerator speedup"]
+  }
+}

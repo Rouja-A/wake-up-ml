@@ -1,126 +1,66 @@
-# Compact Raw-IMU Activity Recognition for Streaming Wake-Up Processing
+# Compact Raw-IMU Activity Recognition (UCI HAR)
 
-EPFL take-home for the internship "Streaming Wake-Up Networks for Low-Power Sensor Processing." A
-compact 1D CNN (under 20,000 parameters) classifies human activity from raw UCI HAR accelerometer/
-gyroscope windows. **The experiment is complete and frozen** — see `report/report.md` for the full
-writeup and `results/` for the saved artifacts described below.
+Take-home exercise for the research assistantship at the Embedded Systems Laboratory (ESL), EPFL.
+A compact 1D CNN (**fewer than 20,000 trainable parameters**) classifies human activity from **raw**
+accelerometer and gyroscope windows of the UCI HAR dataset.
 
-## Repository status
+**Report: `report/final_report.ipynb`** (rendered copies: `report/final_report.html`, `report/final_report.pdf`).
 
-The official test set has **already been evaluated exactly once** for the submitted experiment. The
-frozen result files under `results/metrics/` and `results/figures/` are the artifacts to inspect; there
-is no need to rerun anything to reproduce the numbers in `report/report.md`. Commands below are provided
-for reproducibility/inspection, not as an invitation to re-evaluate the test set (see "Reproducing each
-stage" below).
+## Result in one paragraph
+
+Three CNNs (A: 3,766 params, B: 14,390, C: 8,862) were compared on a subject-held-out validation split; C was selected,
+retrained on all 21 training subjects for 17 epochs, and evaluated once on the 9 official test subjects:
+**accuracy 0.9240, macro-F1 0.9231** (2,947 windows). A strictly causal Model D (3,906 params) and a linear baseline
+were then trained (validation only) to build the accuracy-vs-cost Pareto analysis. Dominant failure: SITTING vs STANDING,
+concentrated in a few subjects. Details, confusion matrix and discussion are in the report.
 
 ## Setup
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-python scripts/download_data.py --out_dir data      # optional; or extract the UCI HAR zip yourself
-export UCI_HAR_DIR="data/UCI HAR Dataset"           # or pass --data_dir to every script below
+python scripts/download_data.py --out_dir data          # or extract the UCI HAR zip yourself
+export UCI_HAR_DIR="data/UCI HAR Dataset"                # or pass --data_dir to the scripts
 ```
 
 ## Input representation
 
-Six raw channels per 128-sample (2.56 s @ 50 Hz) window, `(6, 128)` float32, fixed order:
-`total_acc_x, total_acc_y, total_acc_z, body_gyro_x, body_gyro_y, body_gyro_z`. The handcrafted feature
-files (`X_train.txt`, `X_test.txt`, `features*.txt`) are never read by this pipeline — enforced in
-`src/data.py` and covered by `tests/test_data_pipeline.py`.
+Six raw channels per 128-sample window (2.56 s @ 50 Hz), shape `(6, 128)`:
+`total_acc_x/y/z, body_gyro_x/y/z`. The handcrafted feature files (`X_train.txt`, `X_test.txt`, `features*.txt`) are never
+read (enforced in `src/data.py`, tested in `tests/test_data_pipeline.py`).
 
-## Project structure
+## Layout
 
 ```
-configs/baseline.yaml       All data/split/preprocessing/training hyperparameters
-src/
-  data.py                   Raw UCI HAR loader (train-only / test-only / both), feature-file guard
-  preprocessing.py          Subject-held-out split, train-only normalization
-  dataset.py                PyTorch Dataset/DataLoader wrappers
-  architectures.py          Declarative specs for Models A/B/C (single source of truth)
-  model.py                  PyTorch model built from the specs
-  shape_calc.py             Tensor-free params/MACs/receptive-field/activation-size formulas
-  complexity.py             Torch hook-based measurement, cross-checked against shape_calc.py
-  np_reference.py           Pure-NumPy reference forward pass (no torch dependency)
-  train.py                  Training loop, optimizer/scheduler, early stopping, checkpointing
-  evaluate.py               Checkpoint loading + inference + confusion-matrix plotting
-  metrics.py                Accuracy/F1/confusion-matrix/error-group-breakdown metrics
-  experiment_log.py         Phase-1 CSV logging + architecture/epoch-budget selection logic
-scripts/
-  inspect_data.py           Dataset layout/consistency inspection
-  check_preprocessing.py    Split + normalization sanity checks, sample-window plot
-  analyze_models.py         Model complexity comparison (params/MACs/RF/activation memory)
-  smoke_test.py             Short pre-flight pipeline check (not part of the frozen record)
-  run_experiments.py        Phase 1: 3 seeds x A/B/C architecture comparison
-  train_final.py            Phase 2: retrain the selected architecture on all training data
-  evaluate_final.py         ONE-TIME official test evaluation (guarded, see below)
-  verify_report_numbers.py  Static consistency checks against the frozen result files
-tests/                      Unit tests (synthetic-data based, no real dataset/torch required for most)
-results/
-  checkpoints/              Phase-1 (per seed) and Phase-2 (final) model checkpoints
-  metrics/                  experiment_log.csv, architecture_selection.json, final_model_info.json,
-                            final_test_evaluation.json, final_test_predictions.csv,
-                            streaming_analysis.json, model_analysis.json
-  figures/                  confusion_matrix_final.png, sample_windows.png
-report/
-  report.md                    Final report (submit this)
-  step6_streaming_analysis.md  Extended streaming/embedded analysis (report.md Section 8 condenses this)
+configs/baseline.yaml      all data / split / preprocessing / training hyperparameters
+src/                       data loading, preprocessing, models A/B/C, training, metrics, complexity (params/MACs)
+experiments/research_extension/   Model D (causal), linear baseline, sensor ablation, Pareto (validation only)
+scripts/                   run_experiments.py (Phase 1), train_final.py (Phase 2), evaluate_final*.py (test), ...
+tests/                     unit tests (synthetic data)
+results/metrics, figures   saved metrics, curves, final test evaluation, confusion matrix
+results/checkpoints        Phase-1 and final (17-epoch) checkpoints
+results/research_extension Model D / Linear / ablation / Pareto outputs
+report/                    final_report.ipynb (+ .html/.pdf), step6_streaming_analysis.md (supporting derivation)
 ```
 
-## Reproducing each stage
+## Reproducing
 
 ```bash
-# Dataset inspection and preprocessing sanity checks
-python scripts/inspect_data.py --data_dir "$UCI_HAR_DIR"
-python scripts/check_preprocessing.py --data_dir "$UCI_HAR_DIR" --config configs/baseline.yaml
-
-# Model complexity analysis (params/MACs/receptive field/activation memory for A/B/C)
-python scripts/analyze_models.py
-
-# Pre-flight pipeline check (short, writes to results/smoke_test/, does not touch the frozen record)
-python scripts/smoke_test.py --config configs/baseline.yaml --model A --seed 42 --epochs 2 --device auto
-
-# Phase 1: architecture comparison (3 seeds x A/B/C = 9 runs; official test untouched)
-python scripts/run_experiments.py --config configs/baseline.yaml --device auto
-
-# Phase 2: retrain the selected architecture from scratch on all official-training data
-python scripts/train_final.py --config configs/baseline.yaml --device auto
+python scripts/run_experiments.py --config configs/baseline.yaml --device auto       # Phase 1: A/B/C x 3 seeds (validation)
+python scripts/train_final.py     --config configs/baseline.yaml --device auto       # Phase 2: 17 epochs, seed 123
+python scripts/evaluate_final.py  --config configs/baseline.yaml                      # single official-test evaluation
+python scripts/run_research_extension.py --config configs/baseline.yaml --device auto # Model D, Linear, ablation, Pareto
+python tests/test_data_pipeline.py; python tests/test_model.py; python tests/test_step4.py
 ```
 
-**Final evaluation — already performed for this submission, one-time only.** The command below is
-documented for reproducibility; it is guarded against accidental re-use (`scripts/evaluate_final.py`
-refuses to overwrite `results/metrics/final_test_evaluation.json` unless `--force` is passed). For this
-submission, **do not run it and do not pass `--force`** — inspect the saved result files instead:
-`results/metrics/final_test_evaluation.json`, `results/metrics/final_test_predictions.csv`,
-`results/figures/confusion_matrix_final.png`.
+`evaluate_final.py` refuses to run if `results/metrics/final_test_evaluation.json` already exists (single-evaluation guard).
+The submitted test numbers were produced with `scripts/evaluate_final_numpy.py`, a torch-free equivalent that reads the weights
+from the `.pt` file; `--verify_against <predictions.csv>` shows it reproduces PyTorch predictions exactly (checked on 2,947/2,947
+windows of an earlier checkpoint). On a machine with PyTorch, `evaluate_final.py` should give the same numbers.
 
-```bash
-# For reference only -- already executed for this submission:
-# python scripts/evaluate_final.py --config configs/baseline.yaml --device cuda
-```
+## Protocol notes
 
-## Tests and consistency checks
-
-```bash
-python tests/test_data_pipeline.py           # data loading/split/normalization (synthetic data)
-python tests/test_model.py                   # architecture/complexity correctness
-python tests/test_step4.py                   # training loop, logging, Phase-1/2 isolation
-python scripts/verify_report_numbers.py      # static arithmetic checks against results/metrics/*
-```
-
-`verify_report_numbers.py` runs no training or inference: it recomputes accuracy/F1/error-group counts
-from the saved confusion matrix and recounts the confusion matrix from `final_test_predictions.csv`,
-checking both against `final_test_evaluation.json`; it also checks `architecture_selection.json` and
-`final_model_info.json` for consistency (selected model, seed, epoch budget) and cross-checks
-`streaming_analysis.json` against a fresh recomputation from `src/architectures.py`. If any of those
-result files are absent from a given checkout, the corresponding check is skipped and reported as such.
-
-## Where the report and results live
-
-- **Report:** `report/report.md` (main), `report/step6_streaming_analysis.md` (extended streaming
-  analysis referenced by report.md Section 8).
-- **Final metrics:** `results/metrics/final_test_evaluation.json`, `results/metrics/final_test_predictions.csv`.
-- **Confusion matrix figure:** `results/figures/confusion_matrix_final.png`.
-- **Phase-1 log:** `results/experiment_log.csv`; selection outcome: `results/metrics/architecture_selection.json`.
-- **Phase-2 metadata:** `results/metrics/final_model_info.json`; checkpoint: `results/checkpoints/phase2_final_C_seed123.pt`.
-- **Model complexity:** `results/metrics/model_analysis.json`; streaming derivation: `results/metrics/streaming_analysis.json`.
+* Validation is split **by subject** (17 train / 4 val subjects) because windows overlap 50 %.
+* Normalisation statistics are fit on training data only and stored in each checkpoint.
+* Phase-2 epoch budget = `round(mean(Phase-1 epochs_ran))` = `round(mean([17, 17, 18]))` = 17.
+* An earlier 1-epoch draft of Phase 2 is archived under `results/historical_original_protocol/` for transparency only; it is not the submitted model.
